@@ -427,7 +427,7 @@ def implement_ocr(filename, compare_gpt=False,
 
     Args:
         filename (str): Path to the PDF file.
-        comparison_mode (str): "tesseract" or "gpt_ocr".
+        comparison_mode (str): "tesseract" or "ocr_gpt".
         api_key (str): OpenAI API key for GPT-based OCR.
         enhance (bool): If True, runs image enhancement before OCR.
     
@@ -577,7 +577,7 @@ def implement_ocr(filename, compare_gpt=False,
     est_cost_sum = sum(gpt_cost)
     total_cost = est_cost_sum + est_cost_s + est_cost_b
     
-    total_cost = f"Total cost: ${round(total_cost, 2)} = GPT_OCR(${round(est_cost_sum, 2)}) + GPT_Base(${round(est_cost_b, 2)}) + GPT_Test(${round(est_cost_s, 2)})"
+    total_cost = f"Total cost: ${round(total_cost, 2)} = OCR_GPT(${round(est_cost_sum, 2)}) + GPT_Base(${round(est_cost_b, 2)}) + GPT_Test(${round(est_cost_s, 2)})"
         
     # Final output dictionary
     result = {

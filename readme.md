@@ -1,13 +1,9 @@
 ---
-title: "OCR GPT Guide"
+title: "OCR-GPT Package Documentation"
 author: "Kirill Kalinin"
 date: "2024-11-30"
 output: html_document
 ---
-
-# Detailed Description of `ocr_gpt` Package
-
-# GPT OCR Package Documentation
 
 ## Overview
 
@@ -65,12 +61,12 @@ The package identifies tokens with the lowest log probabilities (e.g., `token_ou
 
 Since GPT-based OCR involves API usage, the package provides a detailed cost breakdown:
 
-- **Cost Per Page**: The estimated cost for processing each page using GPT OCR.
+- **Cost Per Page**: The estimated cost for processing each page using OCR-GPT.
 - **Total Cost**: Sum of all processing costs, including comparisons with GPT Base and Tesseract.
 
 Example Cost Breakdown:
 ```
-Total cost: $15.00 = GPT_OCR($10.00) + GPT_Base($3.00) + GPT_Test($2.00)
+Total cost: $15.00 = OCR_GPT($10.00) + GPT_Base($3.00) + GPT_Test($2.00)
 ```
 
 
@@ -105,7 +101,7 @@ Processes the PDF and returns OCR results alongside metrics.
 - **`filename`**: Path to the PDF file.
 - **`compare_gpt`**: Enables OCR comparison (`True`/`False`).
 - **`page_num`**: Adds page numbers to the text (`True`/`False`).
-- **`api_key`**: OpenAI API key for GPT OCR.
+- **`api_key`**: OpenAI API key for OCR-GPT.
 - **`language`**: Language of a document (default: `English`).
 - **`token_outlier`**: Specifies the anomaly detection threshold (default: `-2`).
 - **`enhance`**: Enables image enhancement (default: `False`).
