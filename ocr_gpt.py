@@ -24,7 +24,6 @@ import sys
 import cv2
 import argparse
 
-
 def encode_image(jpgfile):
     """Encodes an image (JPG) to base64 format."""
     if isinstance(jpgfile, Image.Image):
@@ -34,15 +33,12 @@ def encode_image(jpgfile):
     return base64.b64encode(jpgfile).decode('utf-8')
 
 def reconstruct_text_with_newlines(ocr_data):
-    # Group words by line number
     lines = {}
     for word, line_num in zip(ocr_data['text'], ocr_data['line_num']):
         if word.strip():  # Exclude empty words
             if line_num not in lines:
                 lines[line_num] = []
             lines[line_num].append(word)
-
-    # Join words in each line with a space and combine lines with a newline
     reconstructed_text = "\n".join(" ".join(words) for words in lines.values())
     return reconstructed_text
 
@@ -121,7 +117,6 @@ def estimated_gpt_costs(response_data, cost_per_1000_tokens):
     """Calculates estimated costs from GPT API response."""
     usage = response_data.get('usage', {})
     total_tokens = usage.get('total_tokens', 0)
-    #cost_per_1000_tokens = 0.03  # Example cost for GPT-4 Turbo (check OpenAI pricing)
     cost = (total_tokens / 1000) * cost_per_1000_tokens
     return cost
 
@@ -174,7 +169,7 @@ def run_gpt(jpgfile, prompt, api_key, token_outlier, cost_per_1000_tokens):
     return generated_text, analyzed_tokens, estimated_cost
 
 
-def test_gpt(text_fragment, prompt, api_key, language):
+def test_gpt(text_fragment, prompt, api_key, language, cost_per_1000_tokens):
     """Uses GPT API to proofread the text fragment based on the given prompt."""
     headers = {
         "Content-Type": "application/json",
@@ -186,7 +181,6 @@ def test_gpt(text_fragment, prompt, api_key, language):
         "Copy and highlight problematic fragments with asterisks ('<' as the start of the problematic fragment and '>' as the end of the problematic fragment)." 
         "Then, create a short enumerated list (e.g., 1. 2.) of the identified problems.")
     
-    # Construct the prompt to send to GPT-3
     prompt_data = {
         "model": "gpt-4-turbo",
         "messages": [
@@ -206,15 +200,12 @@ def test_gpt(text_fragment, prompt, api_key, language):
         ]
     }
 
-    # Send the request to the GPT API
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=prompt_data)
     
-    # Parse the response from GPT
     response_message = response.json()
     generated_text = response_message['choices'][0]['message']['content']
     
-    estimated_cost = estimated_gpt_costs(response_message)
-    # Return the generated text and the analyzed tokens
+    estimated_cost = estimated_gpt_costs(response_message, cost_per_1000_tokens)
     return generated_text, estimated_cost
     
     
@@ -239,7 +230,6 @@ def compare_to_base(base_text, gpt_text):
     Returns detailed differences, similarity ratio, edit distance, Jaccard similarity, and cosine similarity.
     """
     # Compute differences using difflib
-        
     diff = difflib.ndiff(base_text.splitlines(), gpt_text.splitlines())
        
     differences = "\n".join(diff)
@@ -269,36 +259,10 @@ def compare_to_base(base_text, gpt_text):
     }
 
 
-
 def calculate_gpt_confidence(log_probs):
-    """
-    Calculate confidence for GPT OCR text based on log probabilities.
-    Args:
-        log_probs (list): Log probabilities of tokens from GPT output.
-
-    Returns:
-        float: Average confidence score.
-    """
-    import numpy as np
     probabilities = [np.exp(log_prob) for log_prob in log_probs]  # Convert log probabilities to probabilities
     return np.mean(probabilities)
 
-
-def unified_confidence(log_probs, perplexity):
-    """
-    Combine token probabilities and perplexity to compute a unified confidence score.
-    Args:
-        log_probs (list): Log probabilities of tokens.
-        perplexity (float): Perplexity score.
-
-    Returns:
-        float: Unified confidence score.
-    """
-    token_confidence = calculate_gpt_confidence(log_probs)
-    perplexity_confidence = 1 / (1 + perplexity)  # Normalize perplexity to a confidence-like scale
-    return (token_confidence + perplexity_confidence) / 2  # Average the two
-
-#filename = "80040_0000a_trans-3-4.pdf"
 
 # Define enhancement functions
 def sharpen_image(image):
@@ -419,7 +383,7 @@ def select_best_enhancement(image):
 def implement_ocr(filename, compare_gpt=False, 
                   page_num=True, api_key=None,
                   language="English",
-                  token_outlier=-2, cost_per_1000_tokens=0.03, gpt_test=False, 
+                  token_outlier=-2, cost_per_1000_tokens=0.015, gpt_test=False, 
                   enhance=False):
     """
     Processes a PDF to perform OCR using GPT and compare with either Tesseract OCR or GPT-based OCR.
@@ -525,7 +489,8 @@ def implement_ocr(filename, compare_gpt=False,
             if compare_gpt:
                 base_prompt = ("Please transcribe this page accurately. " 
                                "Replace any hard-to-recognize words with '?????'.")    
-                base_text_gpt, base_tokens, est_cost_b = run_gpt(page_image, base_prompt, api_key, token_outlier, cost_per_1000_tokens)
+                base_text_gpt, base_tokens, est_cost_b = run_gpt(page_image, base_prompt, 
+                                                                 api_key, token_outlier, cost_per_1000_tokens)
                 average_gpt_confidence_base = round(base_tokens['gpt_confidence'], 3) * 100
                 base_tokens_perplexity = base_tokens['perplexity']
                  
@@ -565,11 +530,11 @@ def implement_ocr(filename, compare_gpt=False,
     metrics_df["Average"] = metrics_df.mean(axis=1)
     metrics_df["Std.Dev"] = metrics_df.std(axis=1)
 
-    gpt_ocr = " ".join(gpt_texts)
+    ocr_gpt = " ".join(gpt_texts)
     
     if gpt_test:
         for i, text_fragment in enumerate(gpt_texts):
-            response, est_cost_t = test_gpt(text_fragment, prompt, api_key, language)
+            response, est_cost_t = test_gpt(text_fragment, prompt, api_key, language, cost_per_1000_tokens)
             page_number = i + 1  
             gpt_tests["Page " + str(page_number)] = response
             est_cost_s = est_cost_s + est_cost_t
@@ -581,7 +546,7 @@ def implement_ocr(filename, compare_gpt=False,
         
     # Final output dictionary
     result = {
-        "gpt_ocr_text": gpt_ocr,
+        "ocr_gpt_text": ocr_gpt,
         "metrics": metrics_df,
         "lowest_logprob_tokens": gpt_tokens,
         "gpt_test": gpt_tests,
@@ -642,16 +607,7 @@ def implement_ocr_list(file_list, **kwargs):
 
 
 def implement_ocr_folder(folder_path, **kwargs):
-    """
-    Processes all PDF files in the specified folder path using OCR and generates a summary.
-
-    Args:
-        folder_path (str): Path to the folder containing PDF files.
-        **kwargs: Additional arguments to pass to `implement_ocr_list`.
-
-    Returns:
-        pd.DataFrame: Summary DataFrame containing results for all processed files.
-    """
+    
     if not os.path.isdir(folder_path):
         raise ValueError(f"Provided path '{folder_path}' is not a valid directory.")
 
@@ -679,8 +635,6 @@ class ParseTrueAction(argparse.Action):
             setattr(namespace, self.dest, False)
         else:
             raise argparse.ArgumentError(self, "Invalid boolean value")
-
-
 
 def main():
     parser = argparse.ArgumentParser(description='OCR Tool with GPT and Tesseract Comparison')

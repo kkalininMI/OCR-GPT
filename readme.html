@@ -13,7 +13,7 @@
 
 <meta name="date" content="2024-11-30" />
 
-<title>OCR GPT Guide</title>
+<title>OCR-GPT Package Documentation</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,15 +350,13 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">OCR GPT Guide</h1>
+<h1 class="title toc-ignore">OCR-GPT Package Documentation</h1>
 <h4 class="author">Kirill Kalinin</h4>
 <h4 class="date">2024-11-30</h4>
 
 </div>
 
 
-<div id="ocr-gpt-package-documentation" class="section level1">
-<h1>OCR GPT Package Documentation</h1>
 <div id="overview" class="section level2">
 <h2>Overview</h2>
 <p>This package provides tools to perform Optical Character Recognition
@@ -428,9 +426,11 @@ on text embeddings.</li>
 <li><strong>Perplexity</strong>: Assesses how well GPT predicts the text
 output.</li>
 <li><strong>Average Probability (GPT)</strong>: The average confidence
-of GPT for the generated text.</li>
+of GPT for the generated text. <strong>The primary indicator of GPT-OCR
+quality.</strong></li>
 <li><strong>Average Confidence (Tesseract)</strong>: The mean confidence
-score provided by Tesseract OCR.</li>
+score provided by Tesseract OCR. <strong>The primary indicator of
+Tesseract quality.</strong></li>
 </ul>
 <hr />
 </div>
@@ -449,7 +449,7 @@ inconsistencies in the text that may require further review.</p>
 detailed cost breakdown:</p>
 <ul>
 <li><strong>Cost Per Page</strong>: The estimated cost for processing
-each page using OCR GPT.</li>
+each page using OCR-GPT.</li>
 <li><strong>Total Cost</strong>: Sum of all processing costs, including
 comparisons with GPT Base and Tesseract.</li>
 </ul>
@@ -495,8 +495,8 @@ users to budget GPT API usage effectively.</p>
 (<code>True</code>/<code>False</code>).</li>
 <li><strong><code>page_num</code></strong>: Adds page numbers to the
 text (<code>True</code>/<code>False</code>).</li>
-<li><strong><code>api_key</code></strong>: OpenAI API key for OCR
-GPT.</li>
+<li><strong><code>api_key</code></strong>: OpenAI API key for
+OCR-GPT.</li>
 <li><strong><code>language</code></strong>: Language of a document
 (default: <code>English</code>).</li>
 <li><strong><code>token_outlier</code></strong>: Specifies the anomaly
@@ -768,8 +768,128 @@ Produces a similar DataFrame as <code>implement_ocr_batch()</code> but
 aggregates results from all PDFs in the specified folder.</li>
 </ol>
 </div>
+<div id="running-ocr-gpt-in-python" class="section level3">
+<h3>5. <strong>Running OCR-GPT in Python</strong></h3>
+<p>Follow these steps to set up and run the OCR-GPT script in
+Python:</p>
+<div id="download-and-install-anaconda" class="section level4">
+<h4>1. <strong>Download and Install Anaconda</strong></h4>
+<ul>
+<li>Visit <a href="https://www.anaconda.com/products/distribution">Anaconda’s
+official website</a> to download and install Anaconda.</li>
+</ul>
+</div>
+<div id="install-tesseract" class="section level4">
+<h4>2. <strong>Install Tesseract</strong></h4>
+<ul>
+<li><p>Download the Tesseract executable from <a href="https://github.com/UB-Mannheim/tesseract/wiki">this
+link</a>.</p></li>
+<li><p>Install the Tesseract executable in the following
+directory:</p></li>
+</ul>
+<pre class="bash"><code>C:\Program Files (x86)\Tesseract-OCR</code></pre>
+</div>
+<div id="run-anaconda-command-prompt" class="section level4">
+<h4>3. <strong>Run Anaconda Command Prompt</strong></h4>
+<ul>
+<li>Open the Anaconda Command Prompt (or Terminal in macOS/Linux).</li>
+</ul>
+</div>
+<div id="create-virtual-environment" class="section level4">
+<h4>4. <strong>Create Virtual Environment</strong></h4>
+<ul>
+<li>Create a new virtual environment named <code>&quot;ocr_gpt&quot;</code> (or
+any other name) by running the following command:</li>
+</ul>
+<pre class="bash"><code>conda create -n &quot;ocr_gpt&quot;</code></pre>
+</div>
+<div id="download-packages" class="section level4">
+<h4>5. <strong>Download Packages</strong></h4>
+<ul>
+<li>Accept the prompts to download the required packages:</li>
+</ul>
+<pre class="bash"><code>y</code></pre>
+</div>
+<div id="activate-virtual-environment" class="section level4">
+<h4>6. <strong>Activate Virtual Environment</strong></h4>
+<ul>
+<li>Activate the virtual environment with the following command:</li>
+</ul>
+<pre class="bash"><code>conda activate &quot;ocr_gpt&quot;</code></pre>
+</div>
+<div id="change-directory-to-ocr-gpt-script-location" class="section level4">
+<h4>7. <strong>Change Directory to OCR-GPT Script Location</strong></h4>
+<ul>
+<li>Change the directory to where the OCR-GPT script files are located.
+For example:</li>
+</ul>
+<pre class="bash"><code>cd C:\Users\PATH_TO_DIRECTORY</code></pre>
+</div>
+<div id="install-required-packages" class="section level4">
+<h4>8. <strong>Install Required Packages</strong></h4>
+<ul>
+<li>Install pip if it is not already installed in your environment:</li>
+</ul>
+<pre class="bash"><code>conda install pip</code></pre>
+<ul>
+<li>If you are setting up a completely new environment and need all the
+packages to be installed, use the following command:</li>
+</ul>
+<pre class="bash"><code>pip install -r requirements.txt</code></pre>
+<ul>
+<li>If you are updating the OCR-GPT script and need only missing
+packages (e.g., updating from an older version), use this command:</li>
+</ul>
+<pre class="bash"><code>pip install --ignore-installed -r requirements.txt</code></pre>
+<ul>
+<li><strong>Note</strong>: Some packages with C/C++ dependencies may
+require you to install a C++ compiler. Follow Python’s instructions on
+how to download and install it.</li>
+</ul>
+</div>
+<div id="test-tesseract-installation" class="section level4">
+<h4>9. <strong>Test Tesseract Installation</strong></h4>
+<ul>
+<li>To test if Tesseract is installed correctly, open a Python prompt
+and run the following commands:</li>
+</ul>
+<pre class="python"><code>import pytesseract
+print(pytesseract.get_tesseract_version())</code></pre>
+</div>
+<div id="use-ocr-gpt" class="section level4">
+<h4>10. <strong>Use OCR-GPT</strong></h4>
+<ul>
+<li>After setting up, you can start using OCR-GPT for optical character
+recognition (OCR) and text processing with GPT-3. Here’s an example of
+how to use it:</li>
+</ul>
+<pre class="python"><code>import ocr_gpt as ocr
+import openai
+import os
+
+# Set up OpenAI API key
+openai.api_key = os.environ[&quot;OPENAI_API_KEY&quot;]
+api_key = os.environ[&quot;OPENAI_API_KEY&quot;]
+
+# Single file OCR
+filename = &quot;C:/Users/Desktop/OCR/file1.pdf&quot;
+result1 = ocr.implement_ocr(filename, api_key=api_key, 
+                               compare_gpt=True, gpt_test=True,
+                               token_outlier=-2, page_num=False, enhance=False)
+
+# Process a batch of files
+file_list = [&quot;file1.pdf&quot;, &quot;file2.pdf&quot;]
+result2 = ocr.implement_ocr_list(file_list, api_key=api_key, 
+                                 compare_gpt=True, page_num=True,
+                                 gpt_test=False)
+
+# Process all PDF files in a folder
+folder_path = &quot;C:/Users/Desktop/OCR&quot;
+result3 = ocr.implement_ocr_folder(folder_path, api_key=api_key, enhance=True)</code></pre>
+</div>
+</div>
 <div id="command-line-interface-cli-support" class="section level3">
-<h3>5. <strong>Command-Line Interface (CLI) Support</strong></h3>
+<h3>6. <strong>Command-Line Interface (CLI) Support</strong></h3>
 <p>The package can be executed directly from the command line for easy
 integration into workflows.</p>
 <p><strong>Example Command:</strong></p>
@@ -843,7 +963,6 @@ OCR (<code>true</code>/<code>false</code>).</li>
 <p>This package provides robust OCR capabilities by integrating GPT with
 traditional OCR tools and enhancement features, ensuring high accuracy
 and transparency in results.</p>
-</div>
 </div>
 </div>
 

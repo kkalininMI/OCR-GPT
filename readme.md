@@ -46,8 +46,8 @@ The following metrics are used to compare the text outputs:
 - **Jaccard Similarity**: Compares sets of unique words to identify overlap.
 - **Cosine Similarity**: Measures vector similarity based on text embeddings.
 - **Perplexity**: Assesses how well GPT predicts the text output.
-- **Average Probability (GPT)**: The average confidence of GPT for the generated text.
-- **Average Confidence (Tesseract)**: The mean confidence score provided by Tesseract OCR.
+- **Average Probability (GPT)**: The average confidence of GPT for the generated text. **The primary indicator of GPT-OCR quality.**
+- **Average Confidence (Tesseract)**: The mean confidence score provided by Tesseract OCR. **The primary indicator of Tesseract quality.**
 
 ---
 
@@ -210,9 +210,123 @@ Processes all PDF files in a specified folder and summarizes the results.
    Produces a similar DataFrame as `implement_ocr_batch()` but aggregates results from all PDFs in the specified folder.
    
 
+### 5. **Running OCR-GPT in Python**
+
+Follow these steps to set up and run the OCR-GPT script in Python:
+
+#### 1. **Download and Install Anaconda**
+
+   - Visit [Anaconda's official website](https://www.anaconda.com/products/distribution) to download and install Anaconda.
+
+#### 2. **Install Tesseract**
+
+   - Download the Tesseract executable from [this link](https://github.com/UB-Mannheim/tesseract/wiki).
+   
+   - Install the Tesseract executable in the following directory:
+   
+   ```bash
+   C:\Program Files (x86)\Tesseract-OCR
+   ```
+
+#### 3. **Run Anaconda Command Prompt**
+
+   - Open the Anaconda Command Prompt (or Terminal in macOS/Linux).
+
+#### 4. **Create Virtual Environment**
+
+   - Create a new virtual environment named `"ocr_gpt"` (or any other name) by running the following command:
+   
+   ```bash
+   conda create -n "ocr_gpt"
+   ```
+
+#### 5. **Download Packages**
+
+   - Accept the prompts to download the required packages:
+   
+   ```bash
+   y
+   ```
+
+#### 6. **Activate Virtual Environment**
+
+   - Activate the virtual environment with the following command:
+   
+   ```bash
+   conda activate "ocr_gpt"
+   ```
+
+#### 7. **Change Directory to OCR-GPT Script Location**
+
+   - Change the directory to where the OCR-GPT script files are located. For example:
+   
+   ```bash
+   cd C:\Users\PATH_TO_DIRECTORY
+   ```
+
+#### 8. **Install Required Packages**
+
+   - Install pip if it is not already installed in your environment:
+   
+   ```bash
+   conda install pip
+   ```
+
+   - If you are setting up a completely new environment and need all the packages to be installed, use the following command:
+   
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+   - If you are updating the OCR-GPT script and need only missing packages (e.g., updating from an older version), use this command:
+   
+   ```bash
+   pip install --ignore-installed -r requirements.txt
+   ```
+
+   - **Note**: Some packages with C/C++ dependencies may require you to install a C++ compiler. Follow Python's instructions on how to download and install it.
 
 
-### 5. **Command-Line Interface (CLI) Support**
+#### 9. **Test Tesseract Installation**
+
+   - To test if Tesseract is installed correctly, open a Python prompt and run the following commands:
+   
+   ```python
+   import pytesseract
+   print(pytesseract.get_tesseract_version())
+   ```
+
+#### 10. **Use OCR-GPT**
+
+   - After setting up, you can start using OCR-GPT for optical character recognition (OCR) and text processing with GPT-3. Here's an example of how to use it:
+
+   ```python
+   import ocr_gpt as ocr
+   import openai
+   import os
+
+   # Set up OpenAI API key
+   openai.api_key = os.environ["OPENAI_API_KEY"]
+   api_key = os.environ["OPENAI_API_KEY"]
+
+   # Single file OCR
+   filename = "C:/Users/Desktop/OCR/file1.pdf"
+   result1 = ocr.implement_ocr(filename, api_key=api_key, 
+                                  compare_gpt=True, gpt_test=True,
+                                  token_outlier=-2, page_num=False, enhance=False)
+
+   # Process a batch of files
+   file_list = ["file1.pdf", "file2.pdf"]
+   result2 = ocr.implement_ocr_list(file_list, api_key=api_key, 
+                                    compare_gpt=True, page_num=True,
+                                    gpt_test=False)
+
+   # Process all PDF files in a folder
+   folder_path = "C:/Users/Desktop/OCR"
+   result3 = ocr.implement_ocr_folder(folder_path, api_key=api_key, enhance=True)
+   ```
+   
+### 6. **Command-Line Interface (CLI) Support**
 
 The package can be executed directly from the command line for easy integration into workflows. 
 
