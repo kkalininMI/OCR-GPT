@@ -23,6 +23,8 @@ import numpy as np
 import sys
 import cv2
 import argparse
+from datetime import datetime
+
 
 def encode_image(jpgfile):
     """Encodes an image (JPG) to base64 format."""
@@ -626,6 +628,201 @@ def implement_ocr_folder(folder_path, **kwargs):
 
     return summary_df
 
+def tesseract_gpt_ocr(filename, compare_gpt=False, page_num=True, api_key=None, language="English",
+                      token_outlier=-2, cost_per_1000_tokens=0.015, gpt_test=False, enhance=False,
+                      threshold_score_tesseract=0.90):
+    """
+    Processes a PDF to perform OCR using either Tesseract or GPT based on a specific page's confidence score.
+    Outputs a dictionary with metrics and chosen OCR texts, with optional image enhancement.
+    """
+    print(f"Processing {filename}")
+    output_filename = filename.replace('.pdf', '_ocrgpt.txt')
+    log_filename = filename.replace('.pdf', '_log.csv')
+
+    # Store results
+    pages_data = []
+    chosen_texts = []
+    gpt_cost_total = 0
+    gpt_tokens = {}
+
+    # Initialize metrics dictionary
+    metrics = {
+        "Perplexity": [],
+        "Average Confidence/Probability": [],
+        "Estimated Cost": [],
+        "Tesseract OCR": [],
+        "GPT OCR": []
+    }
+
+    # Convert PDF pages to images
+    pages = convert_from_path(filename, dpi=300)
+
+    # Determine best enhancement function
+    best_enhancement_func = None
+    if enhance:
+        print("Running enhancement selection on the first page...")
+        best_enhancement_func_name, _ = select_best_enhancement(pages[0])
+        enhancement_map = {
+            "default_enhancement": lambda x: x,
+            "enhance_image_grayscale_sharpen": enhance_image_grayscale_sharpen,
+            "enhance_image_thresholding": enhance_image_thresholding,
+            "enhance_image_sharpness": enhance_image_sharpness,
+            "enhance_image_contrast": enhance_image_contrast,
+            "enhance_image_brightness": enhance_image_brightness,
+            "adaptive_threshold": adaptive_threshold,
+            "deskew_image": deskew_image,
+        }
+        best_enhancement_func = enhancement_map.get(best_enhancement_func_name, lambda x: x)
+
+    # Process all pages
+    for page_number, page_image in enumerate(pages, start=1):
+        page_info = {
+            'text_tess': None,
+            'text_gpt': None,
+            'confidence_tess': None,
+            'confidence_gpt': None,
+            'tokens_gpt': None,
+            'est_cost_gpt': 0
+        }
+
+        # Apply enhancement
+        if enhance and best_enhancement_func:
+            page_image = best_enhancement_func(page_image)
+
+        # Always run Tesseract first
+        text_tess, confidence_tess = run_tesseract(page_image)
+        page_info['text_tess'] = text_tess
+        page_info['confidence_tess'] = confidence_tess['average_confidence']
+        tess_conf_normalized = confidence_tess['average_confidence'] / 100
+
+        # Decide if GPT OCR is needed
+        use_tesseract = tess_conf_normalized >= threshold_score_tesseract
+        text_gpt, gpt_conf, tokens, est_cost = "", 0, None, 0
+
+        if not use_tesseract:  # Run GPT only if Tesseract is below threshold
+            prompt = (f"Please transcribe this page in {language} accurately. "
+                      "Replace any hard-to-recognize words with your best guess. "
+                      "Mark each new line with \n.")
+            text_gpt, tokens, est_cost = run_gpt(page_image, prompt, api_key, token_outlier, cost_per_1000_tokens)
+            page_info['text_gpt'] = text_gpt
+            page_info['confidence_gpt'] = tokens['gpt_confidence'] * 100
+            page_info['tokens_gpt'] = tokens
+            page_info['est_cost_gpt'] = est_cost
+            gpt_conf = tokens['gpt_confidence']
+
+        # Select primary text
+        primary_text = text_tess if use_tesseract else text_gpt
+        chosen_texts.append(primary_text)
+
+        # Populate remaining metrics
+        metrics["Perplexity"].append(tokens['perplexity'] if tokens else np.nan)
+        metrics["Average Confidence/Probability"].append(page_info['confidence_tess'] if use_tesseract else page_info['confidence_gpt'])
+        metrics["Estimated Cost"].append(page_info['est_cost_gpt'])
+        metrics["Tesseract OCR"].append(use_tesseract)
+        metrics["GPT OCR"].append(not use_tesseract)
+
+        # Accumulate costs
+        if not use_tesseract:
+            gpt_cost_total += page_info['est_cost_gpt']
+            gpt_tokens[f"Page {page_number}"] = tokens['low_conf_tokens'] if tokens else {}
+
+    # Create metrics DataFrame
+    metrics_df = pd.DataFrame(metrics, index=[f"Page {i+1}" for i in range(len(pages))]).T
+        
+    # Convert valid numeric columns
+    numeric_metrics_df = metrics_df.apply(pd.to_numeric, errors='coerce')
+    
+    # Add statistical columns
+    metrics_df["Average"] = numeric_metrics_df.mean(axis=1)
+    metrics_df["Std.Dev"] = numeric_metrics_df.std(axis=1)
+    
+    # Write output file
+    with open(output_filename, 'w', encoding='utf-8') as f:
+        for i, text in enumerate(chosen_texts):
+            if page_num:
+                f.write(f"\n### Page {i+1} ###\n\n")
+            f.write(f"{text}\n")
+
+    # Save metrics to log file
+    metrics_df.to_csv(log_filename, index=True)  # Default separator is ','
+    
+
+    # Total cost calculation
+    total_cost_str = f"Total cost: ${gpt_cost_total:.2f}"
+
+    return {
+        "ocr_text": "\n".join(chosen_texts),
+        "metrics": metrics_df,
+        "low_conf_tokens": gpt_tokens,
+        "total_cost": total_cost_str,
+        "used_tesseract": use_tesseract
+    }
+
+
+def tesseract_gpt_ocr_list(file_list, **kwargs):
+    results = []
+    
+    for file in file_list:
+        filename = os.path.basename(file)
+        ocr_output = tesseract_gpt_ocr(file, **kwargs)
+        
+        # Extract metrics DataFrame and ensure numeric values
+        metrics_df = ocr_output['metrics']
+        metrics_df = metrics_df.apply(pd.to_numeric, errors='coerce')
+        
+        # Extract averages for key metrics
+        avg_perplexity = metrics_df.loc['Perplexity', 'Average'].round(3)
+        avg_confidence = metrics_df.loc['Average Confidence/Probability', 'Average'].round(3)
+        avg_estimated_cost = metrics_df.loc['Estimated Cost', 'Average'].round(3)
+        proportion_tesseract = metrics_df.loc['Tesseract OCR', 'Average'].round(3)
+        
+        # Extract total cost
+        cost_match = re.search(r'Total cost: \$([0-9.]+)', ocr_output["total_cost"])
+        total_cost = float(cost_match.group(1)) if cost_match else 0.0
+        
+        # Build result
+        result = {
+            "filename": filename,
+            "Est.Total Cost": total_cost,
+            "Used Tesseract (%)": proportion_tesseract * 100,  # Convert to percentage
+            "Avg Perplexity": avg_perplexity,
+            "Avg Confidence/Probability": avg_confidence,
+            "Avg Estimated Cost (per page)": avg_estimated_cost
+        }
+        results.append(result)
+    
+    # Create summary DataFrame
+    summary_df = pd.DataFrame(results)
+    
+    # Add total cost row
+    total_cost = summary_df["Est.Total Cost"].sum()
+    total_row = pd.Series({
+        "filename": "Total.Cost.All",
+        "Est.Total Cost": total_cost,
+        "Used Tesseract (%)": None,
+        "Avg Perplexity": None,
+        "Avg Confidence/Probability": None,
+        "Avg Estimated Cost (per page)": None
+    }).to_frame().T
+    
+    summary_df = pd.concat([summary_df, total_row], ignore_index=True)
+    
+    # Save with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    summary_df.to_csv(f"files_log_{timestamp}.csv", index=False)
+    
+    return summary_df
+
+
+def tesseract_gpt_ocr_folder(folder_path, **kwargs):
+    if not os.path.isdir(folder_path):
+        raise ValueError(f"Provided path '{folder_path}' is not a valid directory.")
+    file_list = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.lower().endswith('.pdf')]
+    if not file_list:
+        raise ValueError(f"No PDF files found in '{folder_path}'.")
+    return tesseract_gpt_ocr_list(file_list, **kwargs)
+
+
 
 class ParseTrueAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -660,6 +857,7 @@ def main():
                         help='Whether to apply image enhancement before OCR (true/false)')
     parser.add_argument('--mode', choices=['single', 'batch', 'folder'], required=True,
                         help='Choose "single" for single file processing, "batch" for batch processing, or "folder" for folder processing')
+    parser.add_argument('--threshold_score_tesseract', type=float, default=0.90, help='Tesseract confidence threshold')
 
     args = parser.parse_args()
 

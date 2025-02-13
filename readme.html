@@ -662,8 +662,73 @@ produced by <code>implement_ocr_batch()</code>.</li>
 <li>Raises an error if the provided path is not a directory or contains
 no <code>.pdf</code> files.</li>
 </ul>
+<p>Here’s the structured function description based on your earlier
+template format:</p>
 <hr />
 </div>
+</div>
+<div id="tesseract_gpt_ocr" class="section level3">
+<h3><code>tesseract_gpt_ocr</code></h3>
+<p><strong>Description:</strong><br />
+This function performs Optical Character Recognition (OCR) on a given
+file using Tesseract and optionally compares the extracted text with
+GPT-generated text for verification. It also provides cost estimation
+and text enhancement options.</p>
+<p><strong>Parameters:</strong><br />
+- <code>filename</code> (<em>str</em>): The path to the image or PDF
+file for OCR processing.<br />
+- <code>compare_gpt</code> (<em>bool, default=False</em>): If
+<code>True</code>, compares Tesseract-extracted text with GPT-generated
+text.<br />
+- <code>page_num</code> (<em>bool, default=True</em>): If
+<code>True</code>, includes page numbers in the output.<br />
+- <code>api_key</code> (<em>str, optional</em>): API key for GPT
+processing if <code>compare_gpt</code> is enabled.<br />
+- <code>language</code> (<em>str, default=“English”</em>): Language to
+be used for OCR processing.<br />
+- <code>token_outlier</code> (<em>int, default=-2</em>): Threshold for
+detecting outliers in token distribution.<br />
+- <code>cost_per_1000_tokens</code> (<em>float, default=0.015</em>):
+Estimated cost per 1,000 GPT tokens if <code>compare_gpt</code> is
+enabled.<br />
+- <code>gpt_test</code> (<em>bool, default=False</em>): If
+<code>True</code>, runs a GPT test alongside Tesseract processing.<br />
+- <code>enhance</code> (<em>bool, default=False</em>): If
+<code>True</code>, applies preprocessing enhancements to improve OCR
+accuracy.<br />
+- <code>threshold_score_tesseract</code> (<em>float, default=0.90</em>):
+Confidence threshold for accepting Tesseract-extracted text.</p>
+<p><strong>Returns:</strong><br />
+- Extracted text from the document, with optional GPT comparison and
+cost estimation.</p>
+<hr />
+</div>
+<div id="tesseract_gpt_ocr_list" class="section level3">
+<h3><code>tesseract_gpt_ocr_list</code></h3>
+<p><strong>Description:</strong><br />
+Processes multiple files for OCR using
+<code>tesseract_gpt_ocr</code>.</p>
+<p><strong>Parameters:</strong><br />
+- <code>file_list</code> (<em>list of str</em>): A list of file paths to
+be processed.<br />
+- <code>**kwargs</code>: Additional arguments to be passed to
+<code>tesseract_gpt_ocr</code>.</p>
+<p><strong>Returns:</strong><br />
+- A dictionary mapping file names to their extracted text results.</p>
+<hr />
+</div>
+<div id="tesseract_gpt_ocr_folder" class="section level3">
+<h3><code>tesseract_gpt_ocr_folder</code></h3>
+<p><strong>Description:</strong><br />
+Processes all image or PDF files in a specified folder using OCR.</p>
+<p><strong>Parameters:</strong><br />
+- <code>folder_path</code> (<em>str</em>): Path to the folder containing
+files for OCR processing.<br />
+- <code>**kwargs</code>: Additional arguments to be passed to
+<code>tesseract_gpt_ocr</code>.</p>
+<p><strong>Returns:</strong><br />
+- A dictionary mapping file names to their extracted text results.</p>
+<hr />
 </div>
 <div id="example-outputs" class="section level3">
 <h3>Example Outputs</h3>
@@ -885,7 +950,15 @@ result2 = ocr.implement_ocr_list(file_list, api_key=api_key,
 
 # Process all PDF files in a folder
 folder_path = &quot;C:/Users/Desktop/OCR&quot;
-result3 = ocr.implement_ocr_folder(folder_path, api_key=api_key, enhance=True)</code></pre>
+result3 = ocr.implement_ocr_folder(folder_path, api_key=api_key, enhance=True)
+
+
+# Process all PDF files in a list using Tesseract or OCR
+folder_path = &quot;C:/Users/Desktop/OCR&quot;
+result4 = ocr.tesseract_gpt_ocr_list(file_list, 
+                                     api_key=api_key, enhance=False,
+                                     threshold_score_tesseract=0.90)
+</code></pre>
 </div>
 </div>
 <div id="command-line-interface-cli-support" class="section level3">

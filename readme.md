@@ -194,6 +194,59 @@ Processes all PDF files in a specified folder and summarizes the results.
 #### Notes:
 - Raises an error if the provided path is not a directory or contains no `.pdf` files.
 
+
+Here's the structured function description based on your earlier template format:  
+
+---
+
+### `tesseract_gpt_ocr`  
+
+**Description:**  
+This function performs Optical Character Recognition (OCR) on a given file using Tesseract and optionally compares the extracted text with GPT-generated text for verification. It also provides cost estimation and text enhancement options.  
+
+**Parameters:**  
+- `filename` (*str*): The path to the image or PDF file for OCR processing.  
+- `compare_gpt` (*bool, default=False*): If `True`, compares Tesseract-extracted text with GPT-generated text.  
+- `page_num` (*bool, default=True*): If `True`, includes page numbers in the output.  
+- `api_key` (*str, optional*): API key for GPT processing if `compare_gpt` is enabled.  
+- `language` (*str, default="English"*): Language to be used for OCR processing.  
+- `token_outlier` (*int, default=-2*): Threshold for detecting outliers in token distribution.  
+- `cost_per_1000_tokens` (*float, default=0.015*): Estimated cost per 1,000 GPT tokens if `compare_gpt` is enabled.  
+- `gpt_test` (*bool, default=False*): If `True`, runs a GPT test alongside Tesseract processing.  
+- `enhance` (*bool, default=False*): If `True`, applies preprocessing enhancements to improve OCR accuracy.  
+- `threshold_score_tesseract` (*float, default=0.90*): Confidence threshold for accepting Tesseract-extracted text.  
+
+**Returns:**  
+- Extracted text from the document, with optional GPT comparison and cost estimation.  
+
+---
+
+### `tesseract_gpt_ocr_list`  
+
+**Description:**  
+Processes multiple files for OCR using `tesseract_gpt_ocr`.  
+
+**Parameters:**  
+- `file_list` (*list of str*): A list of file paths to be processed.  
+- `**kwargs`: Additional arguments to be passed to `tesseract_gpt_ocr`.  
+
+**Returns:**  
+- A dictionary mapping file names to their extracted text results.  
+
+---
+
+### `tesseract_gpt_ocr_folder`  
+
+**Description:**  
+Processes all image or PDF files in a specified folder using OCR.  
+
+**Parameters:**  
+- `folder_path` (*str*): Path to the folder containing files for OCR processing.  
+- `**kwargs`: Additional arguments to be passed to `tesseract_gpt_ocr`.  
+
+**Returns:**  
+- A dictionary mapping file names to their extracted text results.  
+
 ---
 
 ### Example Outputs
@@ -324,6 +377,14 @@ Follow these steps to set up and run the OCR-GPT script in Python:
    # Process all PDF files in a folder
    folder_path = "C:/Users/Desktop/OCR"
    result3 = ocr.implement_ocr_folder(folder_path, api_key=api_key, enhance=True)
+   
+   
+   # Process all PDF files in a list using Tesseract or OCR
+   folder_path = "C:/Users/Desktop/OCR"
+   result4 = ocr.tesseract_gpt_ocr_list(file_list, 
+                                        api_key=api_key, enhance=False,
+                                        threshold_score_tesseract=0.90)
+   
    ```
    
 ### 6. **Command-Line Interface (CLI) Support**
