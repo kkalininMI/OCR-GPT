@@ -194,15 +194,12 @@ Processes all PDF files in a specified folder and summarizes the results.
 #### Notes:
 - Raises an error if the provided path is not a directory or contains no `.pdf` files.
 
-
-Here's the structured function description based on your earlier template format:  
-
 ---
 
 ### `tesseract_gpt_ocr`  
 
 **Description:**  
-This function performs Optical Character Recognition (OCR) on a given file using Tesseract and optionally compares the extracted text with GPT-generated text for verification. It also provides cost estimation and text enhancement options.  
+This function performs Optical Character Recognition (OCR) on a given file using Tesseract. If the `tesseract observed score` is lower than `threshold_score_tesseract`, it resorts to `ocr_gpt` generation. Additionally, it provides cost estimation, text enhancement options, and log files in CSV format.
 
 **Parameters:**  
 - `filename` (*str*): The path to the image or PDF file for OCR processing.  
@@ -217,7 +214,8 @@ This function performs Optical Character Recognition (OCR) on a given file using
 - `threshold_score_tesseract` (*float, default=0.90*): Confidence threshold for accepting Tesseract-extracted text.  
 
 **Returns:**  
-- Extracted text from the document, with optional GPT comparison and cost estimation.  
+- A file with extracted text from the document 
+- OCR statistics in a separate file
 
 ---
 
@@ -231,7 +229,8 @@ Processes multiple files for OCR using `tesseract_gpt_ocr`.
 - `**kwargs`: Additional arguments to be passed to `tesseract_gpt_ocr`.  
 
 **Returns:**  
-- A dictionary mapping file names to their extracted text results.  
+- Files with extracted text from the documents 
+- OCR statistics in separate files
 
 ---
 
@@ -245,7 +244,9 @@ Processes all image or PDF files in a specified folder using OCR.
 - `**kwargs`: Additional arguments to be passed to `tesseract_gpt_ocr`.  
 
 **Returns:**  
-- A dictionary mapping file names to their extracted text results.  
+- Files with extracted text from the documents 
+- OCR statistics in separate files
+
 
 ---
 

@@ -662,8 +662,6 @@ produced by <code>implement_ocr_batch()</code>.</li>
 <li>Raises an error if the provided path is not a directory or contains
 no <code>.pdf</code> files.</li>
 </ul>
-<p>Here’s the structured function description based on your earlier
-template format:</p>
 <hr />
 </div>
 </div>
@@ -671,9 +669,10 @@ template format:</p>
 <h3><code>tesseract_gpt_ocr</code></h3>
 <p><strong>Description:</strong><br />
 This function performs Optical Character Recognition (OCR) on a given
-file using Tesseract and optionally compares the extracted text with
-GPT-generated text for verification. It also provides cost estimation
-and text enhancement options.</p>
+file using Tesseract. If the <code>tesseract observed score</code> is
+lower than <code>threshold_score_tesseract</code>, it resorts to
+<code>ocr_gpt</code> generation. Additionally, it provides cost
+estimation, text enhancement options, and log files in CSV format.</p>
 <p><strong>Parameters:</strong><br />
 - <code>filename</code> (<em>str</em>): The path to the image or PDF
 file for OCR processing.<br />
@@ -699,8 +698,8 @@ accuracy.<br />
 - <code>threshold_score_tesseract</code> (<em>float, default=0.90</em>):
 Confidence threshold for accepting Tesseract-extracted text.</p>
 <p><strong>Returns:</strong><br />
-- Extracted text from the document, with optional GPT comparison and
-cost estimation.</p>
+- A file with extracted text from the document - OCR statistics in a
+separate file</p>
 <hr />
 </div>
 <div id="tesseract_gpt_ocr_list" class="section level3">
@@ -714,7 +713,8 @@ be processed.<br />
 - <code>**kwargs</code>: Additional arguments to be passed to
 <code>tesseract_gpt_ocr</code>.</p>
 <p><strong>Returns:</strong><br />
-- A dictionary mapping file names to their extracted text results.</p>
+- Files with extracted text from the documents - OCR statistics in
+separate files</p>
 <hr />
 </div>
 <div id="tesseract_gpt_ocr_folder" class="section level3">
@@ -727,7 +727,8 @@ files for OCR processing.<br />
 - <code>**kwargs</code>: Additional arguments to be passed to
 <code>tesseract_gpt_ocr</code>.</p>
 <p><strong>Returns:</strong><br />
-- A dictionary mapping file names to their extracted text results.</p>
+- Files with extracted text from the documents - OCR statistics in
+separate files</p>
 <hr />
 </div>
 <div id="example-outputs" class="section level3">
